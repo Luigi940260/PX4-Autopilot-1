@@ -52,6 +52,8 @@ px4_add_board(
 		vmount
 		vtol_att_control
 		uuv_att_control
+    state_info
+    custom
 
 	SYSTEMCMDS
 		#dumpfile

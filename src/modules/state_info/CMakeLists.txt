@@ -30,15 +30,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
-
 px4_add_module(
-	MODULE examples__hello
-	MAIN hello
-	COMPILE_FLAGS
-	STACK_MAIN 3000
+	MODULE modules__state_info
+	MAIN state_info
 	SRCS
-		hello_main.cpp
-		hello_start.cpp
-		hello_example.cpp
+		state_info.cpp
 	DEPENDS
 	)

@@ -32,13 +32,13 @@
 ############################################################################
 
 px4_add_module(
-	MODULE examples__hello
-	MAIN hello
+	MODULE examples__px4_first_app
+	MAIN px4_first_app
 	COMPILE_FLAGS
 	STACK_MAIN 3000
 	SRCS
-		hello_main.cpp
-		hello_start.cpp
-		hello_example.cpp
+		px4_first_app_main.cpp
+		px4_first_app_start.cpp
+		px4_first_app.cpp
 	DEPENDS
 	)

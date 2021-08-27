@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013-2016 PX4 Development Team. All rights reserved.
+ *   Copyright (C) 2015 Mark Charlebois. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,59 +31,36 @@
  *
  ****************************************************************************/
 
-/**
- * @file px4_custom_mode.h
- * PX4 custom flight modes
- *
- */
+ /**
+  * @file px4_first_app.h
+  * Example app for Linux
+  *
+  * @author Luigi Chiocci <gigi99.lc@gmail.com>
+  */
 
-#ifndef PX4_CUSTOM_MODE_H_
-#define PX4_CUSTOM_MODE_H_
+#include "px4_first_app.h"
+#include <px4_platform_common/time.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <px4_platform_common/log.h>
 
-#include <stdint.h>
+px4::AppState px4_first_app::appState;
+int px4_first_app::counter;
 
-enum PX4_CUSTOM_MAIN_MODE {
-	PX4_CUSTOM_MAIN_MODE_MANUAL = 1,
-	PX4_CUSTOM_MAIN_MODE_ALTCTL,
-	PX4_CUSTOM_MAIN_MODE_POSCTL,
-	PX4_CUSTOM_MAIN_MODE_AUTO,
-	PX4_CUSTOM_MAIN_MODE_ACRO,
-	PX4_CUSTOM_MAIN_MODE_OFFBOARD,
-	PX4_CUSTOM_MAIN_MODE_STABILIZED,
-	PX4_CUSTOM_MAIN_MODE_RATTITUDE,
-	PX4_CUSTOM_MAIN_MODE_SIMPLE, /* unused, but reserved for future use */
-  PX4_CUSTOM_MAIN_MODE_CUSTOM
-};
+int px4_first_app::execute() {
+	appState.setRunning(true);
 
-enum PX4_CUSTOM_SUB_MODE_AUTO {
-	PX4_CUSTOM_SUB_MODE_AUTO_READY = 1,
-	PX4_CUSTOM_SUB_MODE_AUTO_TAKEOFF,
-	PX4_CUSTOM_SUB_MODE_AUTO_LOITER,
-	PX4_CUSTOM_SUB_MODE_AUTO_MISSION,
-	PX4_CUSTOM_SUB_MODE_AUTO_RTL,
-	PX4_CUSTOM_SUB_MODE_AUTO_LAND,
-	PX4_CUSTOM_SUB_MODE_AUTO_RESERVED_DO_NOT_USE, // was PX4_CUSTOM_SUB_MODE_AUTO_RTGS, deleted 2020-03-05
-	PX4_CUSTOM_SUB_MODE_AUTO_FOLLOW_TARGET,
-	PX4_CUSTOM_SUB_MODE_AUTO_PRECLAND
-};
+	for (int i = 0; i < 10 && !appState.exitRequested(); i++) {
+		px4_sleep(counter);
 
-enum PX4_CUSTOM_SUB_MODE_POSCTL {
-	PX4_CUSTOM_SUB_MODE_POSCTL_POSCTL = 0,
-	PX4_CUSTOM_SUB_MODE_POSCTL_ORBIT
-};
+		PX4_INFO("Work in Progress...\n");
+	}
+if (appState.isRunning()) 
+   appState.setRunning(false);
 
-union px4_custom_mode {
-	struct {
-		uint16_t reserved;
-		uint8_t main_mode;
-		uint8_t sub_mode;
-	};
-	uint32_t data;
-	float data_float;
-	struct {
-		uint16_t reserved_hl;
-		uint16_t custom_mode_hl;
-	};
-};
+	return 0;
+}
 
-#endif /* PX4_CUSTOM_MODE_H_ */
+void px4_first_app::setCounter(int newCount) {
+	counter = newCount;
+}

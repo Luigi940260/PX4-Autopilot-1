@@ -1,6 +1,7 @@
+#pragma once
 /****************************************************************************
  *
- *   Copyright (c) 2013-2016 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2012-2016 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,59 +32,61 @@
  *
  ****************************************************************************/
 
-/**
- * @file px4_custom_mode.h
- * PX4 custom flight modes
- *
- */
+ /**
+  * @file custom_class.h
+  *
+  *
+  * @author Luigi Chiocci
+  */
 
-#ifndef PX4_CUSTOM_MODE_H_
-#define PX4_CUSTOM_MODE_H_
+#include <px4_platform_common/px4_config.h>
+#include <px4_platform_common/tasks.h>
+#include <px4_platform_common/posix.h>
+#include <px4_platform_common/log.h>
+#include <px4_platform_common/defines.h>
+#include <px4_platform_common/module.h>
+#include <px4_platform_common/module_params.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <poll.h>
 
-#include <stdint.h>
+#include <string.h>
+#include <math.h>
 
-enum PX4_CUSTOM_MAIN_MODE {
-	PX4_CUSTOM_MAIN_MODE_MANUAL = 1,
-	PX4_CUSTOM_MAIN_MODE_ALTCTL,
-	PX4_CUSTOM_MAIN_MODE_POSCTL,
-	PX4_CUSTOM_MAIN_MODE_AUTO,
-	PX4_CUSTOM_MAIN_MODE_ACRO,
-	PX4_CUSTOM_MAIN_MODE_OFFBOARD,
-	PX4_CUSTOM_MAIN_MODE_STABILIZED,
-	PX4_CUSTOM_MAIN_MODE_RATTITUDE,
-	PX4_CUSTOM_MAIN_MODE_SIMPLE, /* unused, but reserved for future use */
-  PX4_CUSTOM_MAIN_MODE_CUSTOM
+#include <uORB/uORB.h>
+#include <uORB/topics/setpoint.h>
+#include <uORB/topics/state.h>
+#include <uORB/Subscription.hpp>
+#include <uORB/Publication.hpp>
+#include <drivers/drv_hrt.h>
+
+#include <px4_platform_common/app.h>
+
+
+
+class custom_class
+{
+private:
+	const float Tau = 20; //Filter constant
+	const uint64_t Ts = 1000; //Sample time (microseconds)
+	const float Ts_sec = 0.001; //Sample time (seconds)
+  const float delta = 0.5; //Delta for  the final setpoint
+  
+public:
+  static float main_setp[3]; //Array for the final setpoint
+  
+  static float initial_cond[3];
+  
+  static bool update[3];
+  
+	custom_class() {}
+
+	~custom_class() {}
+
+	int main(); //Setpoint Generator
+
+	void Filter(float* a, float* b, float t, float* input, float* output); //Filter
+
+	static bool running; // tracker to terminate app
 };
-
-enum PX4_CUSTOM_SUB_MODE_AUTO {
-	PX4_CUSTOM_SUB_MODE_AUTO_READY = 1,
-	PX4_CUSTOM_SUB_MODE_AUTO_TAKEOFF,
-	PX4_CUSTOM_SUB_MODE_AUTO_LOITER,
-	PX4_CUSTOM_SUB_MODE_AUTO_MISSION,
-	PX4_CUSTOM_SUB_MODE_AUTO_RTL,
-	PX4_CUSTOM_SUB_MODE_AUTO_LAND,
-	PX4_CUSTOM_SUB_MODE_AUTO_RESERVED_DO_NOT_USE, // was PX4_CUSTOM_SUB_MODE_AUTO_RTGS, deleted 2020-03-05
-	PX4_CUSTOM_SUB_MODE_AUTO_FOLLOW_TARGET,
-	PX4_CUSTOM_SUB_MODE_AUTO_PRECLAND
-};
-
-enum PX4_CUSTOM_SUB_MODE_POSCTL {
-	PX4_CUSTOM_SUB_MODE_POSCTL_POSCTL = 0,
-	PX4_CUSTOM_SUB_MODE_POSCTL_ORBIT
-};
-
-union px4_custom_mode {
-	struct {
-		uint16_t reserved;
-		uint8_t main_mode;
-		uint8_t sub_mode;
-	};
-	uint32_t data;
-	float data_float;
-	struct {
-		uint16_t reserved_hl;
-		uint16_t custom_mode_hl;
-	};
-};
-
-#endif /* PX4_CUSTOM_MODE_H_ */

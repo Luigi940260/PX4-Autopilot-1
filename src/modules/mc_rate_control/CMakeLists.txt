@@ -32,6 +32,7 @@
 ############################################################################
 
 add_subdirectory(RateControl)
+add_subdirectory(CustomController)
 
 px4_add_module(
 	MODULE modules__mc_rate_control
@@ -42,6 +43,7 @@ px4_add_module(
 		MulticopterRateControl.cpp
 		MulticopterRateControl.hpp
 	DEPENDS
+		CustomController
 		circuit_breaker
 		mathlib
 		RateControl

@@ -58,7 +58,10 @@
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_rates_setpoint.h>
-#include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/vehicle_status.h> 
+
+// Include Custom Controller
+#include "CustomController/Custom_Controller.hpp"
 
 class MulticopterRateControl : public ModuleBase<MulticopterRateControl>, public ModuleParams, public px4::WorkItem
 {
@@ -91,6 +94,8 @@ private:
 	 */
 	float		get_landing_gear_state();
 
+	Custom_Controller custom_ctrl; //Custom Controller object
+
 	RateControl _rate_control; ///< class for rate control calculations
 
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
@@ -103,6 +108,10 @@ private:
 	uORB::Subscription _vehicle_angular_acceleration_sub{ORB_ID(vehicle_angular_acceleration)};
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
+	uORB::Subscription _vehicle_attitude_sub{ ORB_ID(vehicle_attitude) };
+	uORB::Subscription _vehicle_local_position_sub{ ORB_ID(vehicle_local_position) };
+	uORB::Subscription _setpoint_sub{ ORB_ID(setpoint) };          // Used for custom controller
+  uORB::Subscription _vehicle_global_position_sub{ ORB_ID(vehicle_global_position)};
 
 	uORB::SubscriptionCallbackWorkItem _vehicle_angular_velocity_sub{this, ORB_ID(vehicle_angular_velocity)};
 
@@ -110,6 +119,7 @@ private:
 	uORB::PublicationMulti<rate_ctrl_status_s>	_controller_status_pub{ORB_ID(rate_ctrl_status), ORB_PRIO_DEFAULT};	/**< controller status publication */
 	uORB::Publication<landing_gear_s>		_landing_gear_pub{ORB_ID(landing_gear)};
 	uORB::Publication<vehicle_rates_setpoint_s>	_v_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};			/**< rate setpoint publication */
+  uORB::Publication<state_s> _state_output_pub{ORB_ID(state)};    // Used ofr publish custom controller output state
 
 	landing_gear_s 			_landing_gear{};
 	manual_control_setpoint_s	_manual_control_setpoint{};

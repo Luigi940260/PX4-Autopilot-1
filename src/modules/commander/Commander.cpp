@@ -390,7 +390,10 @@ extern "C" __EXPORT int commander_main(int argc, char *argv[])
 				send_vehicle_command(vehicle_command_s::VEHICLE_CMD_DO_SET_MODE, 1, PX4_CUSTOM_MAIN_MODE_AUTO,
 						     PX4_CUSTOM_SUB_MODE_AUTO_PRECLAND);
 
-			} else {
+			} else if (!strcmp(argv[2], "custom")) {
+				send_vehicle_command(vehicle_command_s::VEHICLE_CMD_DO_SET_MODE, 1, PX4_CUSTOM_MAIN_MODE_CUSTOM);
+                                                                                                           
+      }else {
 				PX4_ERR("argument %s unsupported.", argv[2]);
 			}
 
@@ -400,6 +403,52 @@ extern "C" __EXPORT int commander_main(int argc, char *argv[])
 			PX4_ERR("missing argument");
 		}
 	}
+ 
+  // Mode Description
+  if (!strcmp(argv[1], "currentmode")) {
+    int commander_state_h = orb_subscribe(ORB_ID(commander_state));
+    struct commander_state_s internal_state {};
+    
+    orb_copy(ORB_ID(commander_state), commander_state_h, &internal_state);
+    
+    if (internal_state.main_state == 0) {
+      PX4_INFO("current flight mode is manual");
+    } else if (internal_state.main_state == 1) {
+      PX4_INFO("current flight mode is altitude control");
+    } else if (internal_state.main_state == 2) {
+      PX4_INFO("current flight mode is position control");
+    } else if (internal_state.main_state == 3) {
+      PX4_INFO("current flight mode is auto mission");
+    } else if (internal_state.main_state == 4) {
+      PX4_INFO("current flight mode is auto loiter");
+    } else if (internal_state.main_state == 5) {
+      PX4_INFO("current flight mode is auto rtl");
+    } else if (internal_state.main_state == 6) {
+      PX4_INFO("current flight mode is acro");
+    } else if (internal_state.main_state == 7) {
+      PX4_INFO("current flight mode is offboard");
+    } else if (internal_state.main_state == 8) {
+      PX4_INFO("current flight mode is stabilized");
+    } else if (internal_state.main_state == 9) {
+      PX4_INFO("current flight mode is rattitude ");
+    } else if (internal_state.main_state == 10) {
+      PX4_INFO("current flight mode is auto takeoff");
+    } else if (internal_state.main_state == 11) {
+      PX4_INFO("current flight mode is auto land");
+    } else if (internal_state.main_state == 12) {
+      PX4_INFO("current flight mode is auto follow target");
+    } else if (internal_state.main_state == 13) {
+      PX4_INFO("current flight mode is auto precland");
+    } else if (internal_state.main_state == 14) {
+      PX4_INFO("current flight mode is orbit");
+    } else if (internal_state.main_state == 15) {
+      PX4_INFO("current flight mode is max");
+    } else if (internal_state.main_state == 16) {
+      PX4_INFO("current flight mode is custom");
+    }
+    
+     return 0;
+  }
 
 	if (!strcmp(argv[1], "lockdown")) {
 
@@ -651,7 +700,12 @@ Commander::handle_command(vehicle_status_s *status_local, const vehicle_command_
 					main_ret = main_state_transition(*status_local, commander_state_s::MAIN_STATE_RATTITUDE, status_flags,
 									 &_internal_state);
 
-				} else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_STABILIZED) {
+				} else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_CUSTOM) {
+					/* CUSTOM */
+					main_ret = main_state_transition(*status_local, commander_state_s::MAIN_STATE_CUSTOM, status_flags,
+									 &_internal_state); 
+                                                                                                                 
+        } else if (custom_main_mode == PX4_CUSTOM_MAIN_MODE_STABILIZED) {
 					/* STABILIZED */
 					main_ret = main_state_transition(*status_local, commander_state_s::MAIN_STATE_STAB, status_flags, &_internal_state);
 
@@ -761,7 +815,8 @@ Commander::handle_command(vehicle_status_s *status_local, const vehicle_command_
 						    (status_local->nav_state == vehicle_status_s::NAVIGATION_STATE_MANUAL ||
 						     status_local->nav_state == vehicle_status_s::NAVIGATION_STATE_ACRO ||
 						     status_local->nav_state == vehicle_status_s::NAVIGATION_STATE_STAB ||
-						     status_local->nav_state == vehicle_status_s::NAVIGATION_STATE_RATTITUDE)) {
+						     status_local->nav_state == vehicle_status_s::NAVIGATION_STATE_RATTITUDE ||
+                 status_local->nav_state == vehicle_status_s::NAVIGATION_STATE_CUSTOM )) {
 							mavlink_log_critical(&mavlink_log_pub, "Arming denied! Throttle not zero");
 							cmd_result = vehicle_command_s::VEHICLE_CMD_RESULT_DENIED;
 							break;
@@ -3197,18 +3252,21 @@ Commander::update_control_mode()
 
 	switch (status.nav_state) {
 	case vehicle_status_s::NAVIGATION_STATE_MANUAL:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = stabilization_required();
 		control_mode.flag_control_attitude_enabled = stabilization_required();
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_STAB:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_RATTITUDE:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
@@ -3216,19 +3274,37 @@ Commander::update_control_mode()
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_ALTCTL:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
 		control_mode.flag_control_altitude_enabled = true;
 		control_mode.flag_control_climb_rate_enabled = true;
 		break;
+  
+  case vehicle_status_s::NAVIGATION_STATE_CUSTOM:
+    control_mode.flag_control_manual_enabled = true;
+    control_mode.flag_control_rates_enabled = true;
+    control_mode.flag_control_auto_enabled = false;
+    control_mode.flag_control_custom_enabled = true;
+    control_mode.flag_control_attitude_enabled = false;
+    control_mode.flag_control_rattitude_enabled = false;
+    control_mode.flag_control_altitude_enabled = false;
+    control_mode.flag_control_climb_rate_enabled = false;
+    control_mode.flag_control_position_enabled = false;
+    control_mode.flag_control_velocity_enabled = false;
+    control_mode.flag_control_acceleration_enabled = false;
+    control_mode.flag_control_termination_enabled = false;
+    break;
 
 	case vehicle_status_s::NAVIGATION_STATE_POSCTL:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
 		control_mode.flag_control_altitude_enabled = true;
 		control_mode.flag_control_climb_rate_enabled = true;
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_position_enabled = !status.in_transition_mode;
 		control_mode.flag_control_velocity_enabled = !status.in_transition_mode;
 		break;
@@ -3245,6 +3321,7 @@ Commander::update_control_mode()
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION:
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER:
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_TAKEOFF:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_auto_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
@@ -3255,17 +3332,20 @@ Commander::update_control_mode()
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_LANDGPSFAIL:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
 		control_mode.flag_control_climb_rate_enabled = true;
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_ACRO:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_DESCEND:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_auto_enabled = false;
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
@@ -3330,6 +3410,7 @@ Commander::update_control_mode()
 		break;
 
 	case vehicle_status_s::NAVIGATION_STATE_ORBIT:
+    control_mode.flag_control_custom_enabled = false;
 		control_mode.flag_control_manual_enabled = false;
 		control_mode.flag_control_auto_enabled = false;
 		control_mode.flag_control_rates_enabled = true;
@@ -4261,8 +4342,10 @@ The commander module contains the state machine for mode switching and failsafe 
 	PRINT_MODULE_USAGE_COMMAND("land");
 	PRINT_MODULE_USAGE_COMMAND_DESCR("transition", "VTOL transition");
 	PRINT_MODULE_USAGE_COMMAND_DESCR("mode", "Change flight mode");
-	PRINT_MODULE_USAGE_ARG("manual|acro|offboard|stabilized|rattitude|altctl|posctl|auto:mission|auto:loiter|auto:rtl|auto:takeoff|auto:land|auto:precland",
+	PRINT_MODULE_USAGE_ARG("manual|acro|offboard|stabilized|rattitude|custom|altctl|posctl|auto:mission|auto:loiter|auto:rtl|auto:takeoff|auto:land|auto:precland",
 			"Flight mode", false);
+  PRINT_MODULE_USAGE_COMMAND("currentmode");
+  PRINT_MODULE_USAGE_COMMAND_DESCR("info", "mode info");
 	PRINT_MODULE_USAGE_COMMAND("lockdown");
 	PRINT_MODULE_USAGE_ARG("off", "Turn lockdown off", true);
 #endif

@@ -44,6 +44,8 @@
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/module_params.h>
 
+#include <uORB/uORB.h>
+
 // publications
 #include <uORB/Publication.hpp>
 #include <uORB/topics/actuator_armed.h>
@@ -53,6 +55,7 @@
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_status_flags.h>
+#include <uORB/topics/commander_state.h>
 
 // subscriptions
 #include <uORB/Subscription.hpp>
