@@ -192,6 +192,19 @@ MulticopterRateControl::Run()
           state[i + 6] = rpy[i];
         for (int i = 0; i < 3; i++)
           state[i + 9] = rpy_dot[i];
+          
+        //RPY topics Update for simulation reading
+        vehicle_RPY_s vehicle_rpy{};
+        
+        vehicle_rpy.roll = rpy[0];
+        vehicle_rpy.pitch = rpy[1];
+        vehicle_rpy.yaw = rpy[2];
+        vehicle_rpy.roll_dot = rpy_dot[0];
+        vehicle_rpy.pitch_dot = rpy_dot[1];
+        vehicle_rpy.yaw_dot = rpy_dot[2];
+        vehicle_rpy.timestamp = hrt_absolute_time();
+        
+        _vehicle_RPY_pub.publish(vehicle_rpy);
     
 				//Output Array for State Feedback and Error Integral Action
 		    float output_sf[4];
@@ -220,8 +233,9 @@ MulticopterRateControl::Run()
     
 			  //Input Aactuator array
     		float att[4];
- 				for (int i = 0; i < 4; i++)
+ 				for (int i = 0; i < 4; i++){
 				  att[i] = output_sf[i] + output_eia[i];
+      }
             
         //Time update
 	      custom_ctrl.last_time = now;
@@ -236,8 +250,7 @@ MulticopterRateControl::Run()
         actuators.timestamp = hrt_absolute_time();
     
  				_actuators_0_pub.publish(actuators);
- 			}
-
+ 			} 
 		}
 		else {
 

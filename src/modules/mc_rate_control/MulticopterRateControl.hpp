@@ -59,6 +59,7 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h> 
+#include <uORB/topics/vehicle_RPY.h>
 
 // Include Custom Controller
 #include "CustomController/Custom_Controller.hpp"
@@ -120,6 +121,7 @@ private:
 	uORB::Publication<landing_gear_s>		_landing_gear_pub{ORB_ID(landing_gear)};
 	uORB::Publication<vehicle_rates_setpoint_s>	_v_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};			/**< rate setpoint publication */
   uORB::Publication<state_s> _state_output_pub{ORB_ID(state)};    // Used ofr publish custom controller output state
+  uORB::Publication<vehicle_RPY_s> _vehicle_RPY_pub{ORB_ID(vehicle_RPY)};
 
 	landing_gear_s 			_landing_gear{};
 	manual_control_setpoint_s	_manual_control_setpoint{};
