@@ -70,11 +70,12 @@ class custom_class
 private:
 	const float Tau = 20; //Filter constant
 	const uint64_t Ts = 1000; //Sample time (microseconds)
-	const float Ts_sec = 0.001; //Sample time (seconds)
-  const float delta = 0.5; //Delta for  the final setpoint
+  const float delta = 0.1; //Delta for  the final setpoint
   
 public:
   static float main_setp[3]; //Array for the final setpoint
+  
+  const float Ts_sec = 0.001; //Sample time (seconds)
   
   static float initial_cond[3];
   
@@ -87,6 +88,8 @@ public:
 	int main(); //Setpoint Generator
 
 	void Filter(float* a, float* b, float t, float* input, float* output); //Filter
+ 
+  void circle(float radius, float omega, float* center); //Circle Generator
 
 	static bool running; // tracker to terminate app
 };

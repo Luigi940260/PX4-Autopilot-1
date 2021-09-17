@@ -98,36 +98,35 @@ int PX4_MAIN (int argn, char* argv[]) {
     custom.main();
 	}// Perform a circle of a given radius
   else if (!strcmp(argv[1], "circle")) {
-    if (argn != 3) {
+    if (argn != 4) {
       PX4_ERR("Wrong use\n");
 			return 1;
     }
+    
     //Reading Radius
     float r = strtof(argv[2], NULL);
     //Reading center
-    float center[2];
-    center[0] = custom_class::main_setp[0];
-    center[1] = custom_class::main_setp[1]; 
+    float center[3];
+    center[0] = custom_class::initial_cond[0];
+    center[1] = custom_class::initial_cond[1];
+    center[2] = custom_class::initial_cond[2];
     
     //Reaching Initial Position
     custom_class::main_setp[0] = center[0] + r;
     custom_class::update[0] = true;
     custom.main();
     
-    //Performing the circle
-    for (double angle = 0.0; angle < 6.28; angle += 0.1){
-      custom_class::main_setp[0] = center[0] + r*(float)cos(angle);
-      custom_class::main_setp[1] = center[1] + r*(float)sin(angle);
-      custom_class::update[0] = true;
-      custom_class::update[1] = true;
-      custom.main();
-    }
+    float omega = strtof(argv[3], NULL);
+    
+    custom_class::running = true;
+    custom.circle(r, omega, center);
     
     //Return to Initial State
     custom_class::main_setp[0] = center[0];
     custom_class::main_setp[1] = center[1];
     custom_class::update[0] = true;
     custom_class::update[1] = true;
+    custom_class::running = true;
     custom.main();
     
   } else {

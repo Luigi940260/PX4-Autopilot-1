@@ -59,18 +59,23 @@ int custom_class::main()
   //Filter Coefficient Creation
   float a[3];
   float b[3];
+  float ref[3];
   
   for (int i = 0; i < 3; i++)
     if (update[i]){
       if (abs(main_setp[i]) < 0.01f){
         a[i] = 1.0f;
         b[i] = 0.0f;
-        main_setp[i] = -initial_cond[i];
+        ref[i] = -initial_cond[i];
       }
       else {
         a[i] = (main_setp[i] - initial_cond[i])/main_setp[i];
         b[i] = 1/a[i];
+        ref[i] = main_setp[i];
       }
+    }
+    else {
+      ref[i] = initial_cond[i];
     }
   float output[3];
 
@@ -90,7 +95,7 @@ int custom_class::main()
 			time = time + Ts_sec;
 
       //Filter Application
-      Filter(a, b, time, main_setp, output);
+      Filter(a, b, time, ref, output);
       
       // Check for the setpoint reached
       bool test = true;
@@ -114,8 +119,10 @@ int custom_class::main()
 
   }
   //Update Position    
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; i++){
     initial_cond[i] = output[i];
+    update[i] = false;
+  }
 
 	return 0;
 
@@ -137,7 +144,7 @@ abi = i
 
 void custom_class::Filter (float* a, float* b, float t, float* input, float* output) {
   
-  float tau = Tau/(float)4.6;
+  float tau = Tau/(float)7;
   
 	//Filter Dynamic
 	for (int i = 0; i < 3; i++)
@@ -145,4 +152,49 @@ void custom_class::Filter (float* a, float* b, float t, float* input, float* out
 		  output[i] = a[i]*(b[i] - exp(-t / tau)) * input[i];
     else
       output[i] = input[i];
+}
+
+void custom_class::circle(float radius, float omega, float* center){
+  uORB::Publication<setpoint_s>	_setpoint_pub{ ORB_ID(setpoint) };
+  
+  setpoint_s setp{};
+
+  //Loop variable creation
+	uint64_t last_time = hrt_absolute_time();
+ 
+  float time = 0.0f;
+
+  while (running) {
+
+    //Time Reading
+    uint64_t now = hrt_absolute_time();
+		if (now - last_time > Ts) {
+		  last_time = now;
+
+      //Time update
+			time = time + Ts_sec;
+      
+      //Performing the circle
+    
+      double angle = (double)omega*(double)time;
+    
+      setp.xyz[0] = center[0] + radius*(float)cos(angle);
+      setp.xyz[1] = center[1] + radius*(float)sin(angle);
+      setp.xyz[2] = custom_class::initial_cond[2];
+      
+      _setpoint_pub.publish(setp);
+      
+      if (angle > 6.28)
+        running = false;
+      
+    }
+  }
+  
+    //Update Position    
+  for (int i = 0; i < 3; i++){
+    initial_cond[i] = setp.xyz[i];
+    update[i] = false;
+  }
+    
+    
 }
