@@ -68,7 +68,7 @@
 class custom_class
 {
 private:
-	const float Tau = 20; //Filter constant
+	const float Tau = 10; //Filter constant
 	const uint64_t Ts = 1000; //Sample time (microseconds)
   const float delta = 0.1; //Delta for  the final setpoint
   
